@@ -142,7 +142,7 @@ function SGADashboard({
             <p className="eyebrow">Attendance Control</p>
             <h1>Attendance Dashboard</h1>
             <p className="hero-copy">
-              Overview of the student roster, attendance trends, and quick access to SGA operations.
+              Overview of the student roster, attendance trends, and quick access to Student Guidance Associate (SGA) operations.
             </p>
           </div>
         </motion.header>
