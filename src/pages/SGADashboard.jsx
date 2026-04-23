@@ -139,7 +139,7 @@ function SGADashboard({
       <section className="dashboard-shell">
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
-            <p className="eyebrow">Agentic SGA Copilot</p>
+            <p className="eyebrow">Attendance Control</p>
             <h1>Attendance Dashboard</h1>
             <p className="hero-copy">
               Overview of the student roster, attendance trends, and quick access to SGA operations.

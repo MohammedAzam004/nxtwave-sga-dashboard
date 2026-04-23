@@ -1,4 +1,4 @@
-# 🎓 Agentic SGA Copilot — Smart Attendance Management System
+# 🎓 Attendance Control — Smart Attendance Management System
 
 A production-grade, AI-powered Student Governance Assistant (SGA) built with React and Google Gemini. It provides a multi-user attendance management system with real-time session control, intelligent parent communication, risk-based monitoring, and automated weekly reporting.
 
@@ -13,7 +13,7 @@ Traditional attendance tracking in educational institutions relies on manual reg
 
 ## 💡 Solution
 
-Agentic SGA Copilot automates the entire attendance lifecycle — from session management and self-marking to AI-generated parent alerts and weekly reports — all within a single, elegant dashboard.
+Attendance Control automates the entire attendance lifecycle — from session management and self-marking to AI-generated parent alerts and weekly reports — all within a single, elegant dashboard.
 
 ---
 

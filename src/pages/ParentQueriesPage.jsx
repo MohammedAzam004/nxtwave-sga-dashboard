@@ -80,7 +80,7 @@ function ParentQueriesPage({
       <section className="dashboard-shell">
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
-            <p className="eyebrow">SGA Workspace</p>
+            <p className="eyebrow">Attendance Control</p>
             <h1>Parent Queries</h1>
             <p className="hero-copy">
               Review escalated parent questions, verify the AI answer, and send

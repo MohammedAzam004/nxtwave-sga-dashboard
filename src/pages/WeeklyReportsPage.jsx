@@ -83,7 +83,7 @@ function WeeklyReportsPage({
       <section className="dashboard-shell">
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
-            <p className="eyebrow">SGA Workspace</p>
+            <p className="eyebrow">Attendance Control</p>
             <h1>Weekly Reports</h1>
             <p className="hero-copy">
               Generate and manage weekly attendance summaries for parents using

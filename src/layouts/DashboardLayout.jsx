@@ -36,7 +36,7 @@ function DashboardLayout({ toasts = [] }) {
         animate="animate"
       >
         <div>
-          <h1 className="navbar__title">Agentic SGA Copilot</h1>
+          <h1 className="navbar__title">Attendance Control</h1>
           <p className="navbar__subtitle">Multi-User System</p>
         </div>
 
