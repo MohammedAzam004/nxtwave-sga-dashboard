@@ -25,7 +25,7 @@ Attendance Control automates the entire attendance lifecycle — from session ma
 - **One-click phase transitions** with validation guards
 
 ### Multi-User System
-- **SGA Dashboard** — Overview of all students with risk indicators
+- **SGA (Student Guidance Associate) Dashboard** — Clean list-view overview of all students with risk indicators and one-click navigation
 - **Student Dashboard** — Self-marking attendance with request flow
 - **Parent Dashboard** — AI-powered Q&A about child's performance
 
@@ -51,6 +51,11 @@ Attendance Control automates the entire attendance lifecycle — from session ma
 - **Query system** — Parents ask questions, AI responds with student data
 - **Escalation flow** — Queries can be escalated to SGA for manual response
 - **Query resolution** — SGA can respond to escalated queries directly
+
+### UI / UX Optimizations
+- **Optimized Dataset** — Pre-configured with a balanced 20-student dataset for optimal performance and clean demo presentations
+- **Fluid Navigation** — Clickable list rows, persistent back buttons, and auto-scroll-to-top ensures a native app feel
+- **Responsive Design** — Fully mobile-compatible layouts leveraging CSS Grid and Flexbox
 
 ---
 
