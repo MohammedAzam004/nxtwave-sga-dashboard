@@ -25,11 +25,11 @@ import {
   createDefaultAttendanceSession,
 } from "../utils/attendance";
 
-const STUDENTS_STORAGE_KEY = "students";
-const ATTENDANCE_HISTORY_STORAGE_KEY = "attendanceHistoryById";
-const ATTENDANCE_ACCESS_STORAGE_KEY = "studentAttendanceAccessById";
-const ATTENDANCE_PHASE_STORAGE_KEY = "attendancePhase";
-const ATTENDANCE_REQUESTS_STORAGE_KEY = "attendanceRequestsByStudentId";
+const STUDENTS_STORAGE_KEY = "students_v2";
+const ATTENDANCE_HISTORY_STORAGE_KEY = "attendanceHistoryById_v2";
+const ATTENDANCE_ACCESS_STORAGE_KEY = "studentAttendanceAccessById_v2";
+const ATTENDANCE_PHASE_STORAGE_KEY = "attendancePhase_v2";
+const ATTENDANCE_REQUESTS_STORAGE_KEY = "attendanceRequestsByStudentId_v2";
 
 const validPhases = ["session", "grace", "closed"];
 

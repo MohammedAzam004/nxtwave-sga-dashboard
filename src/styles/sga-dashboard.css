@@ -718,6 +718,231 @@ p {
   gap: var(--space-6);
 }
 
+/* === Student List View === */
+.student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.student-list__header {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 0.8fr 1.5fr;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.student-list__col {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+/* === Student Row === */
+.student-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 0.8fr 1.5fr;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.student-row:last-child {
+  border-bottom: none;
+}
+
+.student-row:hover {
+  background-color: var(--bg-app);
+}
+
+.student-row--high:hover {
+  border-left-color: var(--color-risk-high);
+  background-color: rgba(254, 242, 242, 0.5);
+}
+
+.student-row--medium:hover {
+  border-left-color: var(--color-risk-medium);
+  background-color: rgba(255, 251, 235, 0.5);
+}
+
+.student-row--low:hover {
+  border-left-color: var(--color-risk-low);
+  background-color: rgba(236, 253, 245, 0.5);
+}
+
+.student-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.student-row__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-row__name--link {
+  text-decoration: none;
+  color: var(--color-primary);
+  transition: color 0.2s ease;
+  display: block;
+}
+
+.student-row__name--link:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.student-row__id {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.student-row__attendance {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.student-row__attendance-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 42px;
+}
+
+.student-row__progress {
+  flex: 1;
+  height: 6px;
+  max-width: 120px;
+}
+
+.student-row__risk {
+  display: flex;
+  align-items: center;
+}
+
+.student-row__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.student-row__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.student-row__btn--student {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.student-row__btn--student:hover {
+  background-color: #27272a;
+  box-shadow: var(--shadow-sm);
+}
+
+.student-row__btn--parent {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-primary);
+}
+
+.student-row__btn--parent:hover {
+  background-color: var(--color-secondary);
+  border-color: var(--color-muted);
+}
+
+/* === Student List Responsive === */
+@media (max-width: 900px) {
+  .student-list__header {
+    display: none;
+  }
+
+  .student-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-4);
+    border-left: 3px solid var(--color-border);
+  }
+
+  .student-row--high {
+    border-left-color: var(--color-risk-high);
+  }
+
+  .student-row--medium {
+    border-left-color: var(--color-risk-medium);
+  }
+
+  .student-row--low {
+    border-left-color: var(--color-risk-low);
+  }
+
+  .student-row__info {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .student-row__attendance {
+    justify-content: flex-start;
+  }
+
+  .student-row__progress {
+    max-width: 160px;
+  }
+
+  .student-row__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .student-row__btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-row__btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+}
+
+
 .stat-card {
   background: var(--bg-card);
   border-radius: var(--radius-xl);

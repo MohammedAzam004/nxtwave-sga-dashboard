@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import SearchBar from "../components/domain/SearchBar";
 import SkeletonGrid from "../components/ui/SkeletonGrid";
 import {
@@ -78,6 +79,10 @@ function ParentQueriesPage({
       exit="exit"
     >
       <section className="dashboard-shell">
+        <Link to="/sga-dashboard" className="detail-back-link">
+          Back to SGA Dashboard
+        </Link>
+
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
             <p className="eyebrow">Attendance Control</p>

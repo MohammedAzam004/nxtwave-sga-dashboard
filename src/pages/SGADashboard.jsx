@@ -5,7 +5,7 @@ import FilterBar from "../components/domain/FilterBar";
 import SearchBar from "../components/domain/SearchBar";
 import SortBar from "../components/domain/SortBar";
 import StatsCard from "../components/domain/StatsCard";
-import StudentCard from "../components/domain/StudentCard";
+import StudentRow from "../components/domain/StudentRow";
 import SkeletonGrid from "../components/ui/SkeletonGrid";
 import { getRiskPriority } from "../services/riskService";
 import {
@@ -230,8 +230,8 @@ function SGADashboard({
           <div>
             <h2>Student Overview</h2>
             <p>
-              Search, filter, and sort the roster. Click any card to open the
-              full student record.
+              Search, filter, and sort the roster. Use the action buttons to
+              switch views.
             </p>
           </div>
           {!isLoading && !errorMessage ? (
@@ -269,11 +269,17 @@ function SGADashboard({
 
             {sortedStudents.length ? (
               <motion.section
-                className="student-grid"
+                className="student-list"
                 variants={subtleStaggerGroup}
               >
+                <div className="student-list__header">
+                  <span className="student-list__col student-list__col--info">Student</span>
+                  <span className="student-list__col student-list__col--attendance">Attendance</span>
+                  <span className="student-list__col student-list__col--risk">Risk</span>
+                  <span className="student-list__col student-list__col--actions">Actions</span>
+                </div>
                 {sortedStudents.map((student) => (
-                  <StudentCard key={student.id} student={student} />
+                  <StudentRow key={student.id} student={student} />
                 ))}
               </motion.section>
             ) : (

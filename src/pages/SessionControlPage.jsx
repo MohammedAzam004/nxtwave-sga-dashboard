@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import SearchBar from "../components/domain/SearchBar";
 import { formatQueryTimestamp } from "../services/queryService";
 import { getActiveSession } from "../utils/attendance";
@@ -126,6 +127,10 @@ function SessionControlPage({
       exit="exit"
     >
       <section className="dashboard-shell">
+        <Link to="/sga-dashboard" className="detail-back-link">
+          Back to SGA Dashboard
+        </Link>
+
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
             <p className="eyebrow">Operations</p>

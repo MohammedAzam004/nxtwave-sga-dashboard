@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import FilterBar from "../components/domain/FilterBar";
 import SearchBar from "../components/domain/SearchBar";
 import {
@@ -81,6 +82,10 @@ function WeeklyReportsPage({
       exit="exit"
     >
       <section className="dashboard-shell">
+        <Link to="/sga-dashboard" className="detail-back-link">
+          Back to SGA Dashboard
+        </Link>
+
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
             <p className="eyebrow">Attendance Control</p>

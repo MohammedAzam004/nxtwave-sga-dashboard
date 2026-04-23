@@ -15,9 +15,6 @@ function DashboardLayout({ toasts = [] }) {
   const isSessionControlActive = location.pathname === "/session-control";
   const isWeeklyReportsActive = location.pathname === "/weekly-reports";
   const isParentQueriesActive = location.pathname === "/parent-queries";
-  const isParentActive =
-    location.pathname === "/parent-dashboard" ||
-    location.pathname.startsWith("/parent-dashboard/");
 
   const handleResetDemo = () => {
     if (window.confirm("Reset all demo data? This clears localStorage and reloads the page.")) {
@@ -64,12 +61,6 @@ function DashboardLayout({ toasts = [] }) {
             className={`nav-item ${isParentQueriesActive ? "active" : ""}`}
           >
             Parent Queries
-          </NavLink>
-          <NavLink
-            to="/parent-dashboard"
-            className={`nav-item ${isParentActive ? "active" : ""}`}
-          >
-            Parent Dashboard
           </NavLink>
           <button
             type="button"
