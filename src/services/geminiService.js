@@ -10,9 +10,58 @@ const GEMINI_PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL;
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_API_URL =
   `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const STORED_ALERTS_KEY = "agentic-sga-parent-alerts-v3";
+const LEGACY_ALERT_KEYS = [
+  "agentic-sga-parent-alerts",
+  "agentic-sga-parent-alerts-v2",
+];
 
-export function isGeminiConfigured() {
-  return Boolean(GEMINI_PROXY_URL || GEMINI_API_KEY);
+function canUseLocalStorage() {
+  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+function clearLegacyAlertStorage() {
+  if (!canUseLocalStorage()) {
+    return;
+  }
+
+  LEGACY_ALERT_KEYS.forEach((legacyKey) => {
+    window.localStorage.removeItem(legacyKey);
+  });
+}
+
+function readStoredAlerts() {
+  if (!canUseLocalStorage()) {
+    return {};
+  }
+
+  try {
+    clearLegacyAlertStorage();
+    const storedAlerts = window.localStorage.getItem(STORED_ALERTS_KEY);
+    return storedAlerts ? JSON.parse(storedAlerts) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredAlert(studentId, alertRecord) {
+  if (!canUseLocalStorage() || studentId === undefined || studentId === null) {
+    return {
+      ...alertRecord,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  clearLegacyAlertStorage();
+  const alerts = readStoredAlerts();
+  const savedAlertRecord = {
+    ...alertRecord,
+    generatedAt: new Date().toISOString(),
+  };
+  alerts[String(studentId)] = savedAlertRecord;
+
+  window.localStorage.setItem(STORED_ALERTS_KEY, JSON.stringify(alerts));
+  return savedAlertRecord;
 }
 
 function normalizeStudent(student) {
@@ -35,62 +84,6 @@ function normalizeStudent(student) {
   };
 }
 
-// --- Prompt Builders ---
-
-function buildPrompt(student) {
-  return `
-You are an empathetic school attendance support assistant for the Student Guidance & Attendance (SGA) team.
-
-Write one polite, professional message to ${student.parentName}, the parent or guardian of ${student.name}.
-
-Context:
-- Attendance percentage: ${student.attendancePercentage}%
-- Classes attended: ${student.attendedClasses} out of ${student.totalClasses}
-- Risk level: ${getRiskLabel(student.riskLevel)}
-- This alert is being sent because the student's attendance session was not confirmed during the 9-10 AM window and the subsequent grace period.
-
-Requirements:
-- Address the parent by role ("Dear Parent/Guardian")
-- Clearly state the student's current attendance standing
-- Mention that the SGA team is reaching out regarding session attendance
-- Suggest 1 or 2 constructive next steps
-- Keep the message between 3 to 5 sentences
-- Do not use bullet points or markdown
-- End with a short professional sign-off from the Student Guidance & Attendance Team
-  `.trim();
-}
-
-function buildFallbackMessage(student) {
-  return `Dear Parent/Guardian, we are reaching out from the SGA team regarding ${student.name}'s attendance. Their current attendance stands at ${student.attendancePercentage}% (${student.attendedClasses} of ${student.totalClasses} classes), which places them in the ${getRiskLabel(student.riskLevel).toLowerCase()} category. We encourage you to connect with us so we can work together to support consistent attendance. Kind regards, Student Guidance & Attendance Team`;
-}
-
-function buildAbsenceAlertPrompt(student, slot) {
-  return `
-You are writing an official session-based attendance alert from the SGA team to a parent.
-
-Context:
-- Student name: ${student.name}
-- Missed session slot: ${slot} AM
-- Current attendance: ${student.attendancePercentage}% (${student.attendedClasses} of ${student.totalClasses} classes)
-- Current risk level: ${getRiskLabel(student.riskLevel)}
-- Reason: Attendance was not recorded during the ${slot} AM session window or the grace period that followed.
-
-Requirements:
-- Start with "Dear Parent/Guardian,"
-- Mention the specific missed session slot (${slot} AM)
-- State that attendance was not confirmed during the allowed time window and grace period
-- Include the current attendance percentage
-- Ask for timely attendance in future sessions
-- End with "Regards, SGA Team"
-- Keep it to 3 to 5 sentences, professional and clear
-- Do not use markdown or bullet points
-  `.trim();
-}
-
-function buildAbsenceAlertFallback(student, slot) {
-  return `Dear Parent/Guardian,\n\nYour child ${student.name} was marked absent for the ${slot} AM session as attendance was not recorded within the allowed time. Despite a grace period for manual updates, attendance was not confirmed. Their current attendance is ${student.attendancePercentage}%. Please ensure timely attendance in future sessions.\n\nRegards,\nSGA Team`;
-}
-
 function buildWeeklyReportPrompt(student, weeklySummary) {
   return `
 You are an academic attendance assistant writing a formal weekly report from the SGA team to a parent.
@@ -111,8 +104,8 @@ REQUIREMENTS:
 - Mention the missed-session count clearly.
 - Provide one practical suggestion for improvement if attendance is low.
 - If no sessions were recorded this week, clearly say that no attendance sessions were recorded in the current reporting window and avoid assuming reasons.
-- Keep the response to 3 to 5 sentences.
-- Start with "Dear Parent/Guardian,"
+- Keep the response to 4 to 6 sentences.
+- Start with "Dear Parent,"
 - End with "Regards, SGA Team"
 - Do not use bullet points or markdown.
   `.trim();
@@ -120,30 +113,18 @@ REQUIREMENTS:
 
 function buildWeeklyReportFallback(student, weeklySummary) {
   if (!weeklySummary.hasSessions) {
-    return `Dear Parent/Guardian,\n\nThis is a weekly attendance summary from the SGA team for ${student.name}. No attendance sessions were recorded in the current reporting window (${weeklySummary.periodLabel}), so a weekly attendance percentage could not be fully assessed. We recommend continuing to monitor attendance closely.\n\nRegards, SGA Team`;
+    return `Dear Parent,\n\nThis is a weekly attendance summary from the SGA team for ${student.name}. No attendance sessions were recorded in the current reporting window (${weeklySummary.periodLabel}), so a weekly attendance percentage could not be fully assessed from session data. Based on the latest available record, we recommend continuing to monitor attendance closely and reaching out to the SGA team if you would like a manual review.\n\nRegards, SGA Team`;
   }
 
-  return `Dear Parent/Guardian,\n\nThis is a weekly attendance update from the SGA team for ${student.name}. Your child recorded ${weeklySummary.presentCount} present sessions out of ${weeklySummary.totalSessions} total sessions this week, resulting in a weekly attendance of ${weeklySummary.attendancePercentage}%. This falls under the ${getRiskLabel(weeklySummary.riskLevel).toLowerCase()} category, and ${weeklySummary.missedSessions} session${weeklySummary.missedSessions === 1 ? "" : "s"} were missed. We recommend encouraging regular attendance in the coming week.\n\nRegards, SGA Team`;
+  return `Dear Parent,\n\nThis is a weekly attendance update from the SGA team for ${student.name}. Your child recorded ${weeklySummary.presentCount} present sessions out of ${weeklySummary.totalSessions} total sessions this week, resulting in a weekly attendance of ${weeklySummary.attendancePercentage}%. This falls under the ${getRiskLabel(weeklySummary.riskLevel).toLowerCase()} category, and ${weeklySummary.missedSessions} session${weeklySummary.missedSessions === 1 ? "" : "s"} were missed during the reporting period. We recommend encouraging regular attendance and staying consistent with class participation in the coming week.\n\nRegards, SGA Team`;
 }
 
 export function detectIntent(query) {
   const normalizedQuery = query.trim().toLowerCase();
 
-  // Greeting detection
-  if (/^(hi|hello|hey|good\s*(morning|afternoon|evening)|greetings)\b/i.test(normalizedQuery)) {
-    return "greeting";
-  }
-
-  // Irrelevant topic detection
   if (
-    /\b(weather|joke|funny|cricket|movie|recipe|news|politics|game|song|music|capital of|who is the president|tell me a)\b/.test(
-      normalizedQuery,
-    )
+    /\b(why|reason|cause|explain|explaining)\b/.test(normalizedQuery)
   ) {
-    return "irrelevant";
-  }
-
-  if (/\b(why|reason|cause|explain|explaining)\b/.test(normalizedQuery)) {
     return "why";
   }
 
@@ -159,25 +140,6 @@ export function detectIntent(query) {
 }
 
 function getIntentPromptInstructions(intent, student) {
-  if (intent === "greeting") {
-    return `
-INTENT TYPE: greeting
-- The parent has greeted. Respond politely and warmly.
-- Acknowledge them and ask how you can help regarding their child ${student.name}'s attendance or performance.
-- Keep the reply to 1-2 sentences only.
-    `.trim();
-  }
-
-  if (intent === "irrelevant") {
-    return `
-INTENT TYPE: irrelevant
-- The parent has asked something unrelated to student attendance or performance.
-- Respond with EXACTLY: "This assistant is only for student-related information. Please ask about your child's attendance or performance."
-- Do NOT answer the irrelevant question.
-- Do NOT add any other information.
-    `.trim();
-  }
-
   if (intent === "why") {
     return `
 INTENT TYPE: why
@@ -205,15 +167,66 @@ INTENT TYPE: details
   `.trim();
 }
 
+function buildPrompt(student) {
+  return `
+You are an empathetic school attendance support assistant.
+
+Write one polite, professional message to ${student.parentName}, the parent or guardian of ${student.name}.
+
+Context:
+- Attendance percentage: ${student.attendancePercentage}%
+- Classes attended: ${student.attendedClasses} out of ${student.totalClasses}
+- Risk level: ${getRiskLabel(student.riskLevel)}
+
+Requirements:
+- Express concern in a calm and supportive tone
+- Mention the attendance concern clearly
+- Encourage the parent to connect with the school
+- Suggest 1 or 2 constructive next steps
+- Keep the message between 90 and 140 words
+- Do not use bullet points
+- Do not use markdown
+- End with a short professional sign-off from the Student Guidance & Attendance Team
+  `.trim();
+}
+
+function buildFallbackMessage(student) {
+  return `Dear ${student.parentName}, we wanted to share a concern regarding ${student.name}'s recent attendance. Their current attendance stands at ${student.attendancePercentage}%, which places them in the ${getRiskLabel(student.riskLevel).toLowerCase()} category. We would appreciate the opportunity to work together to understand any challenges affecting attendance and to support consistent participation in classes. Please consider reaching out to the school so we can discuss helpful next steps and ensure your child receives the support they need. Kind regards, Student Guidance & Attendance Team`;
+}
+
+function buildAbsenceAlertPrompt(student, slot) {
+  return `
+You are writing an official school attendance alert to a parent.
+
+Context:
+- Student name: ${student.name}
+- Missed session: ${slot}
+- Reason: Attendance was not recorded in session or grace period
+
+Write a clear and polite parent message.
+
+Requirements:
+- Start with "Dear Parent,"
+- Mention the missed session (${slot})
+- Explain that attendance was not confirmed during the allowed time window and grace period
+- Ask for timely attendance in future sessions
+- End with "Regards,\nSGA Team"
+- Keep it concise, professional, and easy to understand
+- Do not use markdown or bullet points
+  `.trim();
+}
+
+function buildAbsenceAlertFallback(student, slot) {
+  return `Dear Parent,\n\nYour child ${student.name} was marked absent for the session between ${slot} AM as attendance was not recorded within the allowed time. Despite a grace period for manual updates, attendance was not confirmed. Please ensure timely attendance in future sessions.\n\nRegards,\nSGA Team`;
+}
+
 function buildParentResponsePrompt(student, question, intent) {
   return `
-You are a strict and helpful school attendance assistant AI.
-You ONLY answer questions related to a specific student's attendance, performance, and academic status.
+You are a strict academic assistant. Your job is to answer using ONLY the provided student data.
 
 STUDENT DATA (SOURCE OF TRUTH):
-Student Name: ${student.name}
+Name: ${student.name}
 Attendance Percentage: ${student.attendancePercentage}%
-Classes Attended: ${student.attendedClasses} of ${student.totalClasses}
 Risk Level: ${getRiskLabel(student.riskLevel)}
 
 PARENT QUESTION:
@@ -222,33 +235,25 @@ ${question}
 ${getIntentPromptInstructions(intent, student)}
 
 STRICT RULES:
-1. If the user greets (hello, hi, good morning), respond politely and ask how you can help regarding the student.
-2. If the question is about the student, answer using the provided student data ONLY. Include the student name, attendance %, and risk level when relevant.
-3. If the question asks for suggestions, give simple advice (improve attendance, regular participation, etc.).
-4. If the question is irrelevant (weather, jokes, general topics, anything not about the student), respond with EXACTLY: "This assistant is only for student-related information. Please ask about your child's attendance or performance."
-5. Do NOT make up data. Do NOT answer outside student context.
-6. Do NOT use bullet points or markdown in the final answer.
+1. You MUST only use the provided data.
+2. You MUST NOT invent or assume any information.
+3. If information is missing, clearly say: "I currently only have attendance-related information."
+4. You MUST give a complete answer in 3 to 5 sentences.
+5. You MUST include the student name, attendance percentage, and a simple explanation of the risk level.
+6. If attendance is below 75%, clearly explain that it is low and suggest improvement.
+7. Do NOT give a short or incomplete answer.
+8. Do NOT stop early.
+9. Do not use bullet points or markdown in the final answer.
 
-RESPONSE STYLE:
-- Formal and polite tone
-- 2 to 5 sentences maximum
-- Clear, structured, and helpful
-- Mention the student name when relevant
-- Give a suggestion if attendance is low
+RESPONSE FORMAT:
+- Sentence 1: Start exactly with "${student.name} currently has an attendance of ${student.attendancePercentage}%."
+- Sentence 2: Explain what the ${getRiskLabel(student.riskLevel).toLowerCase()} level means in simple words.
+- Sentence 3: Give a suggestion based only on the attendance data.
+- Add 1 or 2 more short sentences only if needed for clarity.
   `.trim();
 }
 
 function buildParentResponseFallback(student, question, intent) {
-  // Handle greetings
-  if (intent === "greeting") {
-    return `Hello! Welcome to the student attendance assistant. How can I help you regarding ${student.name}'s attendance or academic status?`;
-  }
-
-  // Handle irrelevant queries
-  if (intent === "irrelevant") {
-    return "This assistant is only for student-related information. Please ask about your child's attendance or performance.";
-  }
-
   const asksForMissingDetails =
     /performance|performing|marks|grade|grades|behavior|health|reason|cause|why/i.test(
       question,
@@ -268,14 +273,16 @@ function buildParentResponseFallback(student, question, intent) {
     return `${detailsLine} ${suggestionLine}`;
   }
 
-  if (asksForMissingDetails || intent === "why") {
+  if (asksForMissingDetails) {
+    return `${detailsLine} I currently only have attendance-related information. ${suggestionLine}`;
+  }
+
+  if (intent === "why") {
     return `${detailsLine} I currently only have attendance-related information. ${suggestionLine}`;
   }
 
   return `${detailsLine} ${suggestionLine}`;
 }
-
-// --- API Layer ---
 
 function extractMessage(responseData) {
   if (typeof responseData?.message === "string" && responseData.message.trim()) {
@@ -305,7 +312,9 @@ async function parseError(response) {
 async function requestThroughProxy(prompt, student, generationConfig = {}) {
   const response = await fetch(GEMINI_PROXY_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       model: GEMINI_MODEL,
       prompt,
@@ -333,7 +342,7 @@ async function requestDirectly(prompt, generationConfig = {}) {
         role: "system",
         parts: [
           {
-            text: "You are a school attendance assistant for the SGA team. Use only the provided student data, stay supportive and professional, and never invent missing facts. Always respond in 3 to 5 complete sentences.",
+            text: "You are a school attendance assistant. Use only the provided student data, stay supportive and professional, and never invent missing facts.",
           },
         ],
       },
@@ -360,16 +369,22 @@ async function requestDirectly(prompt, generationConfig = {}) {
 }
 
 async function requestGemini(prompt, student, options = {}) {
-  if (!isGeminiConfigured()) {
-    throw new Error("Gemini is not configured. AI responses will use fallback templates.");
-  }
-
   let responseData;
 
   if (GEMINI_PROXY_URL) {
-    responseData = await requestThroughProxy(prompt, student, options.generationConfig);
-  } else {
+    responseData = await requestThroughProxy(
+      prompt,
+      student,
+      options.generationConfig,
+    );
+  } else if (GEMINI_API_KEY) {
+    // This fallback is convenient for local demos, but client-side env vars
+    // are bundled into the frontend and are not secure for production use.
     responseData = await requestDirectly(prompt, options.generationConfig);
+  } else {
+    throw new Error(
+      "Gemini is not configured. Add VITE_GEMINI_PROXY_URL for a secure setup, or VITE_GEMINI_API_KEY only for local demo use.",
+    );
   }
 
   const message = extractMessage(responseData);
@@ -381,8 +396,6 @@ async function requestGemini(prompt, student, options = {}) {
   return message;
 }
 
-// --- Public API ---
-
 export async function generateMessage(student) {
   const normalizedStudent = normalizeStudent(student);
   const prompt = buildPrompt(normalizedStudent);
@@ -393,23 +406,27 @@ export async function generateMessage(student) {
         temperature: 0.4,
         topP: 0.85,
         maxOutputTokens: 320,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     });
 
-    return {
+    const generatedAlert = saveStoredAlert(normalizedStudent.id, {
       message,
       isFallback: false,
       errorMessage: "",
-      generatedAt: new Date().toISOString(),
-    };
+    });
+
+    return generatedAlert;
   } catch (error) {
-    return {
+    const fallbackAlert = saveStoredAlert(normalizedStudent.id, {
       message: buildFallbackMessage(normalizedStudent),
       isFallback: true,
       errorMessage: error.message || "Unable to generate the message.",
-      generatedAt: new Date().toISOString(),
-    };
+    });
+
+    return fallbackAlert;
   }
 }
 
@@ -424,7 +441,9 @@ export async function generateAbsenceAlert(student, slot) {
         temperature: 0.25,
         topP: 0.8,
         maxOutputTokens: 220,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     });
 
@@ -462,7 +481,9 @@ export async function generateWeeklyReport(student) {
         temperature: 0.35,
         topP: 0.85,
         maxOutputTokens: 320,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     });
 
@@ -510,7 +531,9 @@ export async function generateResponse(student, question) {
         temperature: 0.2,
         topP: 0.8,
         maxOutputTokens: 256,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     });
 
@@ -532,4 +555,20 @@ export async function generateResponse(student, question) {
       errorMessage: error.message || "Unable to generate response at the moment.",
     };
   }
+}
+
+export const generateParentResponse = generateResponse;
+export const generateParentQueryResponse = generateParentResponse;
+
+export function loadStoredGeneratedAlerts() {
+  return readStoredAlerts();
+}
+
+export function getStoredGeneratedAlert(studentId) {
+  if (studentId === undefined || studentId === null) {
+    return null;
+  }
+
+  const storedAlerts = readStoredAlerts();
+  return storedAlerts[String(studentId)] || null;
 }

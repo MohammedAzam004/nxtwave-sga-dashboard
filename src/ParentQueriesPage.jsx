@@ -1,12 +1,10 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import SearchBar from "../components/domain/SearchBar";
-import SkeletonGrid from "../components/ui/SkeletonGrid";
+import SearchBar from "./components/SearchBar";
 import {
   formatQueryTimestamp,
   getQueryStatusLabel,
-} from "../services/queryService";
+} from "./services/queryService";
 import {
   buttonHover,
   buttonTap,
@@ -14,7 +12,7 @@ import {
   fadeUpItem,
   pageVariants,
   subtleStaggerGroup,
-} from "../utils/motion";
+} from "./utils/motion";
 
 function ParentQueriesPage({
   students,
@@ -79,13 +77,9 @@ function ParentQueriesPage({
       exit="exit"
     >
       <section className="dashboard-shell">
-        <Link to="/sga-dashboard" className="detail-back-link">
-          Back to SGA Dashboard
-        </Link>
-
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
-            <p className="eyebrow">Attendance Control</p>
+            <p className="eyebrow">SGA Workspace</p>
             <h1>Parent Queries</h1>
             <p className="hero-copy">
               Review escalated parent questions, verify the AI answer, and send
@@ -115,7 +109,7 @@ function ParentQueriesPage({
         </motion.header>
 
         {isLoading ? (
-          <SkeletonGrid count={3} />
+          <div className="feedback-panel">Loading parent queries...</div>
         ) : null}
 
         {!isLoading && errorMessage ? (

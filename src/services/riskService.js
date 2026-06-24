@@ -1,7 +1,46 @@
 const RISK_CONFIG = Object.freeze({
-  HIGH: { label: "High Risk", priority: 0 },
-  MEDIUM: { label: "Medium Risk", priority: 1 },
-  LOW: { label: "Low Risk", priority: 2 },
+  HIGH: {
+    label: "High Risk",
+    priority: 0,
+    colors: {
+      accent: "var(--high-accent)",
+      softBackground: "var(--high-bg)",
+      badgeBackground: "rgba(255, 239, 242, 0.92)",
+      border: "rgba(193, 90, 103, 0.18)",
+      cardGradient:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 241, 244, 0.92))",
+      statGradient:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.95), var(--high-bg))",
+    },
+  },
+  MEDIUM: {
+    label: "Medium Risk",
+    priority: 1,
+    colors: {
+      accent: "var(--medium-accent)",
+      softBackground: "var(--medium-bg)",
+      badgeBackground: "rgba(255, 247, 226, 0.94)",
+      border: "rgba(189, 134, 52, 0.18)",
+      cardGradient:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 232, 0.92))",
+      statGradient:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.95), var(--medium-bg))",
+    },
+  },
+  LOW: {
+    label: "Low Risk",
+    priority: 2,
+    colors: {
+      accent: "var(--low-accent)",
+      softBackground: "var(--low-bg)",
+      badgeBackground: "rgba(236, 251, 244, 0.94)",
+      border: "rgba(47, 140, 105, 0.18)",
+      cardGradient:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 252, 245, 0.92))",
+      statGradient:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.95), var(--low-bg))",
+    },
+  },
 });
 
 const STABLE_TREND_THRESHOLD = 0.5;
@@ -33,6 +72,10 @@ export function calculateRisk(percentage) {
   }
 
   return "LOW";
+}
+
+export function getRiskColor(riskLevel) {
+  return RISK_CONFIG[normalizeRiskLevel(riskLevel)].colors;
 }
 
 export function getRiskLabel(riskLevel) {

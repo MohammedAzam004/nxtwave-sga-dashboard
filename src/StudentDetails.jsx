@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
-import AlertBox from "../components/domain/AlertBox";
-import RiskBadge from "../components/domain/RiskBadge";
+import AlertBox from "./components/AlertBox";
+import RiskBadge from "./components/RiskBadge";
 import {
   formatQueryTimestamp,
   getQueryStatusLabel,
-} from "../services/queryService";
+} from "./services/queryService";
 import {
+  getRiskColor,
   getRiskLabel,
   getTrendLabel,
-} from "../services/riskService";
+} from "./services/riskService";
 import {
   buttonHover,
   buttonTap,
@@ -19,7 +20,7 @@ import {
   pageVariants,
   staggerGroup,
   subtleStaggerGroup,
-} from "../utils/motion";
+} from "./utils/motion";
 
 const emptyAlertState = {
   message: "",
@@ -133,14 +134,14 @@ function StudentDetails({
   const attendedClasses = student.attendance?.attended ?? 0;
   const totalClasses = student.attendance?.totalClasses ?? 0;
   const riskLevel = student.riskLevel;
-  const riskClass = riskLevel.toLowerCase();
+  const riskColors = getRiskColor(riskLevel);
   const prediction = student.prediction || {
     predictedPercentage: attendancePercentage,
     predictedRiskLevel: riskLevel,
     trendDirection: "STABLE",
     observedPoints: 1,
   };
-  const predictedRiskClass = prediction.predictedRiskLevel.toLowerCase();
+  const predictedRiskColors = getRiskColor(prediction.predictedRiskLevel);
   const studentQueries = studentQueriesById[String(student.id)] || [];
   const attendanceHistory = attendanceHistoryById[String(student.id)] || [];
   const latestAttendanceEvent = attendanceHistory[0];
@@ -185,21 +186,6 @@ function StudentDetails({
                 </p>
               </div>
               <RiskBadge level={riskLevel} />
-            </div>
-
-            <div className="flex gap-4 mt-4">
-              <Link
-                to={`/student-dashboard/${student.id}`}
-                className="btn btn-outline"
-              >
-                View Student Dashboard
-              </Link>
-              <Link
-                to={`/parent-dashboard/${student.id}`}
-                className="btn btn-outline"
-              >
-                View Parent Dashboard
-              </Link>
             </div>
           </div>
 
@@ -281,7 +267,7 @@ function StudentDetails({
                   <strong>{attendancePercentage}%</strong>
                 </div>
 
-                <div className={`attendance-progress attendance-progress--${riskClass}`} aria-hidden="true">
+                <div className="attendance-progress" aria-hidden="true">
                   <span
                     className="attendance-progress__value"
                     style={{ width: `${attendancePercentage}%` }}
@@ -302,9 +288,17 @@ function StudentDetails({
                   <span>Classes Attended</span>
                   <strong>{attendedClasses}</strong>
                 </article>
-                <article className={`student-details__stat student-details__stat--${riskClass}`}>
+                <article
+                  className="student-details__stat"
+                  style={{
+                    background: riskColors.softBackground,
+                    borderColor: riskColors.border,
+                  }}
+                >
                   <span>Current Risk</span>
-                  <strong>{getRiskLabel(riskLevel)}</strong>
+                  <strong style={{ color: riskColors.accent }}>
+                    {getRiskLabel(riskLevel)}
+                  </strong>
                 </article>
               </div>
             </motion.section>
@@ -337,6 +331,15 @@ function StudentDetails({
                   whileTap={buttonTap}
                 >
                   Mark Present
+                </motion.button>
+                <motion.button
+                  type="button"
+                  className="attendance-action-button attendance-action-button--absent"
+                  onClick={() => onMarkAttendance(student.id, "ABSENT")}
+                  whileHover={buttonHover}
+                  whileTap={buttonTap}
+                >
+                  Mark Absent
                 </motion.button>
               </div>
 
@@ -463,9 +466,17 @@ function StudentDetails({
                   <span>Predicted Next Attendance</span>
                   <strong>{prediction.predictedPercentage}%</strong>
                 </article>
-                <article className={`student-details__stat student-details__stat--${predictedRiskClass}`}>
+                <article
+                  className="student-details__stat"
+                  style={{
+                    background: predictedRiskColors.softBackground,
+                    borderColor: predictedRiskColors.border,
+                  }}
+                >
                   <span>Predicted Risk</span>
-                  <strong>{getRiskLabel(prediction.predictedRiskLevel)}</strong>
+                  <strong style={{ color: predictedRiskColors.accent }}>
+                    {getRiskLabel(prediction.predictedRiskLevel)}
+                  </strong>
                 </article>
               </div>
 
@@ -516,7 +527,10 @@ function StudentDetails({
                   isLoading={alertState.isLoading}
                   isFallback={alertState.isFallback}
                   note={alertState.note}
-                  riskLevel={riskLevel}
+                  accentStyle={{
+                    borderColor: riskColors.border,
+                    background: `linear-gradient(180deg, rgba(255, 255, 255, 0.96), ${riskColors.softBackground})`,
+                  }}
                 />
               ) : (
                 <div className="query-empty-state">

@@ -4,14 +4,13 @@ function AlertBox({
   isLoading,
   isFallback,
   note,
-  riskLevel = "LOW",
+  accentStyle,
   onClose,
 }) {
-  const riskClass = riskLevel ? riskLevel.toLowerCase() : "low";
-
   return (
     <section
-      className={`alert-box alert-box--${riskClass}`}
+      className="alert-box"
+      style={accentStyle}
       aria-live="polite"
     >
       <div className="alert-box__header">
@@ -54,4 +53,3 @@ function AlertBox({
 }
 
 export default AlertBox;
-

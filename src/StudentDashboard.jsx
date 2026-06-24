@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
-import RiskBadge from "../components/domain/RiskBadge";
-import { formatQueryTimestamp } from "../services/queryService";
-import { getRiskLabel } from "../services/riskService";
-import { getActiveSession } from "../utils/attendance";
+import RiskBadge from "./components/RiskBadge";
+import { formatQueryTimestamp } from "./services/queryService";
+import { getRiskColor, getRiskLabel } from "./services/riskService";
 import {
   buttonHover,
   buttonTap,
@@ -12,7 +11,7 @@ import {
   fadeUpItem,
   pageVariants,
   subtleStaggerGroup,
-} from "../utils/motion";
+} from "./utils/motion";
 
 const phaseMessages = {
   session: {
@@ -29,6 +28,17 @@ const phaseMessages = {
   },
 };
 
+function getActiveSession(student, currentSessionSlot) {
+  return (
+    (student.attendanceSessions || []).find(
+      (sessionRecord) => sessionRecord.slot === currentSessionSlot,
+    ) || {
+      slot: currentSessionSlot,
+      status: "pending",
+      alertSent: false,
+    }
+  );
+}
 
 function getSessionStatusLabel(status) {
   if (status === "present") {
@@ -113,8 +123,8 @@ function StudentDashboard({
 
   const attendancePercentage = student.attendance?.percentage ?? 0;
   const riskLevel = student.riskLevel;
-  const riskClass = riskLevel.toLowerCase();
-  const activeSession = getActiveSession(student.attendanceSessions, currentSessionSlot);
+  const riskColors = getRiskColor(riskLevel);
+  const activeSession = getActiveSession(student, currentSessionSlot);
   const canMarkAttendance =
     currentPhase === "session" && activeSession.status === "pending";
   const phaseMessage = phaseMessages[currentPhase] || phaseMessages.session;
@@ -334,9 +344,18 @@ function StudentDashboard({
                 </article>
               ) : null}
 
-              <article className={`student-details__stat student-details__stat--${riskClass} mt-4`}>
+              <article
+                className="student-details__stat"
+                style={{
+                  background: riskColors.softBackground,
+                  borderColor: riskColors.border,
+                  marginTop: "16px",
+                }}
+              >
                 <span>Risk Level</span>
-                <strong>{getRiskLabel(riskLevel)}</strong>
+                <strong style={{ color: riskColors.accent }}>
+                  {getRiskLabel(riskLevel)}
+                </strong>
               </article>
             </motion.section>
           </aside>

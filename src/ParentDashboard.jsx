@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useParams, Link } from "react-router-dom";
-import RiskBadge from "../components/domain/RiskBadge";
-import StatsCard from "../components/domain/StatsCard";
-import { generateResponse as generateParentResponse } from "../services/geminiService";
+import { useParams } from "react-router-dom";
+import RiskBadge from "./components/RiskBadge";
+import StatsCard from "./components/StatsCard";
+import { generateParentResponse } from "./services/geminiService";
 import {
   createParentQueryRecord,
   getQueryStatusLabel,
   formatQueryTimestamp,
-} from "../services/queryService";
-import { getRiskLabel } from "../services/riskService";
+} from "./services/queryService";
+import { getRiskColor, getRiskLabel } from "./services/riskService";
 import {
   buttonHover,
   buttonTap,
@@ -18,7 +18,7 @@ import {
   pageVariants,
   staggerGroup,
   subtleStaggerGroup,
-} from "../utils/motion";
+} from "./utils/motion";
 
 const simulatedParentEmail = import.meta.env.VITE_PARENT_EMAIL?.trim().toLowerCase();
 
@@ -129,11 +129,13 @@ function ParentDashboard({
   const attendedClasses = selectedStudent.attendance?.attended ?? 0;
   const totalClasses = selectedStudent.attendance?.totalClasses ?? 0;
   const riskLevel = selectedStudent.riskLevel;
+  const riskColors = getRiskColor(riskLevel);
   const studentQueries = selectedStudent.queries || [];
   const weeklyReports = selectedStudent.weeklyReports || [];
   const latestWeeklyReport = weeklyReports[0] || null;
   const weeklySummary = selectedStudent.weeklyAttendanceSummary;
-  const parentAlerts = (selectedStudent.alerts || [])
+  const absenceAlerts = (selectedStudent.alerts || [])
+    .filter((alertRecord) => alertRecord.type === "absence")
     .sort(
       (alertA, alertB) =>
         new Date(alertB.date).getTime() - new Date(alertA.date).getTime(),
@@ -175,10 +177,6 @@ function ParentDashboard({
       exit="exit"
     >
       <section className="dashboard-shell">
-        <Link to="/sga-dashboard" className="detail-back-link">
-          Back to SGA Dashboard
-        </Link>
-
         <motion.header className="dashboard-hero parent-hero" variants={fadeUpItem}>
           <div>
             <p className="eyebrow">Parent View</p>
@@ -232,6 +230,10 @@ function ParentDashboard({
               label="Risk Level"
               value={getRiskLabel(riskLevel)}
               tone={riskLevel.toLowerCase()}
+              style={{
+                background: riskColors.statGradient,
+                borderColor: riskColors.border,
+              }}
             />
           </motion.div>
           <motion.div variants={fadeUpItem} whileHover={cardHover}>
@@ -377,17 +379,15 @@ function ParentDashboard({
             </motion.section>
 
             <motion.section className="parent-alert-panel" variants={fadeUpItem}>
-              {parentAlerts.length ? (
+              {absenceAlerts.length ? (
                 <div className="parent-alerts-grid">
-                  {parentAlerts.map((alertRecord, index) => (
+                  {absenceAlerts.map((alertRecord, index) => (
                     <article
-                      key={`alert-${alertRecord.slot}-${alertRecord.date}-${index}`}
+                      key={`absence-alert-${alertRecord.slot}-${alertRecord.date}-${index}`}
                       className="query-item parent-alert-card"
                     >
                       <div className="query-item__meta">
-                        <span className="query-item__tag">
-                          {alertRecord.type === "manual" ? "SGA Alert" : "Absence Alert"}
-                        </span>
+                        <span className="query-item__tag">Absence Alert</span>
                         <span className="query-item__status query-item__status--pending">
                           Slot {alertRecord.slot}
                         </span>
@@ -407,9 +407,10 @@ function ParentDashboard({
                 </div>
               ) : (
                 <div className="feedback-panel parent-empty-state">
-                  <h3>No alerts yet</h3>
+                  <h3>No absence alerts yet</h3>
                   <p>
-                    Important attendance alerts from the SGA team will appear here.
+                    If attendance is still pending when SGA closes the session,
+                    an AI-generated absence alert will appear here.
                   </p>
                 </div>
               )}

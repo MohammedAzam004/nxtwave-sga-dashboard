@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import FilterBar from "../components/domain/FilterBar";
-import SearchBar from "../components/domain/SearchBar";
+import FilterBar from "./components/FilterBar";
+import SearchBar from "./components/SearchBar";
 import {
   formatQueryTimestamp,
-} from "../services/queryService";
-import { getWeeklyReportPeriodLabel } from "../services/weeklyReportService";
-import SkeletonGrid from "../components/ui/SkeletonGrid";
+} from "./services/queryService";
+import { getWeeklyReportPeriodLabel } from "./services/weeklyReportService";
 import {
   buttonHover,
   buttonTap,
@@ -15,7 +13,7 @@ import {
   fadeUpItem,
   pageVariants,
   subtleStaggerGroup,
-} from "../utils/motion";
+} from "./utils/motion";
 
 function WeeklyReportsPage({
   students,
@@ -58,21 +56,6 @@ function WeeklyReportsPage({
     }
   };
 
-  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
-
-  const handleGenerateAllReports = async () => {
-    setIsGeneratingAll(true);
-    try {
-      for (const student of filteredStudents) {
-        if (!student.currentWeekReport) {
-          await handleGenerateStudentWeeklyReport(student.id);
-        }
-      }
-    } finally {
-      setIsGeneratingAll(false);
-    }
-  };
-
   return (
     <motion.main
       className="sga-dashboard"
@@ -82,13 +65,9 @@ function WeeklyReportsPage({
       exit="exit"
     >
       <section className="dashboard-shell">
-        <Link to="/sga-dashboard" className="detail-back-link">
-          Back to SGA Dashboard
-        </Link>
-
         <motion.header className="dashboard-hero" variants={fadeUpItem}>
           <div>
-            <p className="eyebrow">Attendance Control</p>
+            <p className="eyebrow">SGA Workspace</p>
             <h1>Weekly Reports</h1>
             <p className="hero-copy">
               Generate and manage weekly attendance summaries for parents using
@@ -118,7 +97,7 @@ function WeeklyReportsPage({
         </motion.header>
 
         {isLoading ? (
-          <SkeletonGrid count={4} />
+          <div className="feedback-panel">Loading weekly reports...</div>
         ) : null}
 
         {!isLoading && errorMessage ? (
@@ -136,19 +115,6 @@ function WeeklyReportsPage({
                 onFilterChange={setSelectedFilter}
               />
             </motion.section>
-
-            <div className="generate-all-row">
-              <motion.button
-                type="button"
-                className="query-form__button"
-                onClick={handleGenerateAllReports}
-                disabled={isGeneratingAll}
-                whileHover={!isGeneratingAll ? buttonHover : undefined}
-                whileTap={!isGeneratingAll ? buttonTap : undefined}
-              >
-                {isGeneratingAll ? "Generating all..." : "Generate All Reports"}
-              </motion.button>
-            </div>
 
             {filteredStudents.length ? (
               <motion.section
